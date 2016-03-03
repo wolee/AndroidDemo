@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="heart_color_0">#fff471af</color>
+    <color name="heart_color_1">#ffe3a683</color>
+    <color name="heart_color_2">#fffa6b6b</color>
+    <color name="heart_color_3">#fff6d229</color>
+    <color name="heart_color_4">#ff7db9fc</color>
+    <color name="heart_color_5">#ff56e8b3</color>
+    <color name="heart_color_6">#ffa398fa</color>
+    <color name="heart_color_7">#ffcf73fc</color>
+</resources>

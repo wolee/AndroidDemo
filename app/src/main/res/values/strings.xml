@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AndroidDemo</string>
+    <string name="test_string_key">%1$s t1 %2$s t2 %3$s oooooooo</string>
+</resources>
