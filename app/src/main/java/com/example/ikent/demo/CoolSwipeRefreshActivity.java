@@ -49,10 +49,16 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity {
         };
 
         mListView.setAdapter(mListAdapter);
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        mSwipeRefreshLayout.setOnRefreshListener(new CoolSwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 refresh();
+            }
+        });
+        mSwipeRefreshLayout.setOnLoadMoreListener(new CoolSwipeRefreshLayout.OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                loadMore();
             }
         });
         mHandler.post(new Runnable() {
