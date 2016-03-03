@@ -13,7 +13,7 @@ android {
     }
     signingConfigs {
         release
-        //±¾µØµ÷ÊÔ¿ªÆô
+        //ï¿½ï¿½ï¿½Øµï¿½ï¿½Ô¿ï¿½ï¿½ï¿½
 
         debug {
             storeFile file('../debug.keystore')
@@ -33,6 +33,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile files('libs/nineoldandroids-2.4.0.jar')
     compile project(':heartlayout')
+    compile project(':refreshlayout')
     compile 'com.android.support:appcompat-v7:23.2.0'
     compile 'com.android.support:design:23.2.0'
 }

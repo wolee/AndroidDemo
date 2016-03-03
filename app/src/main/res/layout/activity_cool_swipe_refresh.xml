@@ -6,8 +6,12 @@
     android:layout_height="match_parent"
     tools:context="com.example.ikent.demo.CoolSwipeRefreshActivity">
     <com.kent.widget.refreshlayout.CoolSwipeRefreshLayout
+        android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
+        <ListView
+            android:id="@+id/refresh_listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
     </com.kent.widget.refreshlayout.CoolSwipeRefreshLayout>
 </RelativeLayout>
