@@ -13,7 +13,7 @@ android {
     }
     signingConfigs {
         release
-        //���ص��Կ���
+        //本地调试开启
 
         debug {
             storeFile file('../debug.keystore')
@@ -25,6 +25,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lintOptions {
+        abortOnError false
     }
 }
 
