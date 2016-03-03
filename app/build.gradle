@@ -1,16 +1,25 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion Integer.parseInt(project.COMPILE_SDK_VERSION)
+    buildToolsVersion project.BUILD_TOOLS_VERSION
 
     defaultConfig {
-        applicationId "com.example.ikent.appdemo"
-        minSdkVersion 9
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+        applicationId project.APPLICATION_ID
+        minSdkVersion Integer.parseInt(project.MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(project.TARGET_SDK_VERSION)
+        versionCode System.getenv("BUILD_NUMBER") as Integer ?: 0
+        versionName project.version
     }
+    signingConfigs {
+        release
+        //本地调试开启
+
+        debug {
+            storeFile file('../debug.keystore')
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -22,7 +31,8 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.1.1'
     compile files('libs/nineoldandroids-2.4.0.jar')
     compile project(':heartlayout')
+    compile 'com.android.support:appcompat-v7:23.2.0'
+    compile 'com.android.support:design:23.2.0'
 }
