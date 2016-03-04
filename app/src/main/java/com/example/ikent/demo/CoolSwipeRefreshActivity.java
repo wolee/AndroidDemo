@@ -3,7 +3,6 @@ package com.example.ikent.demo;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
@@ -14,7 +13,9 @@ import com.kent.widget.refreshlayout.CoolSwipeRefreshLayout;
 
 import java.util.Random;
 
-public class CoolSwipeRefreshActivity extends AppCompatActivity {
+public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolSwipeRefreshLayout.OnSwipeListener {
+
+    private static final String TAG = "CoolSwipeRefreshActivity";
 
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private CoolSwipeRefreshLayout mSwipeRefreshLayout;
@@ -49,34 +50,26 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity {
         };
 
         mListView.setAdapter(mListAdapter);
-        mSwipeRefreshLayout.setOnRefreshListener(new CoolSwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refresh();
-            }
-        });
-        mSwipeRefreshLayout.setOnLoadMoreListener(new CoolSwipeRefreshLayout.OnLoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                loadMore();
-            }
-        });
+        mSwipeRefreshLayout.setOnSwipeListener(this);
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 mSwipeRefreshLayout.setRefreshing(true);
-                refresh();
+                onRefresh();
             }
         });
     }
-    private void refresh() {
+
+    @Override
+    public void onRefresh() {
         new RefreshBackgroundTask().execute();
     }
 
-    private void loadMore() {
+    @Override
+    public void onLoadMore() {
         new LoadMoreBackgroundTask().execute();
     }
-
 
     private void onRefreshComplete(int index, int count) {
         mIndex = index;
@@ -88,7 +81,7 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity {
     private void onLoadMoreComplete(int addCount) {
         mCount += addCount;
         mListAdapter.notifyDataSetChanged();
-        //TODO 暂停上拉刷新
+        mSwipeRefreshLayout.setLoadingMore(false);
     }
 
 
