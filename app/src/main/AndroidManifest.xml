@@ -43,7 +43,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".demo.CoolSwipeRefreshActivity" android:label="Widget/Cool Swipe Refresh">
+            android:name=".demo.CoolSwipeRefreshActivity"
+            android:label="Widget/Cool Swipe Refresh"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

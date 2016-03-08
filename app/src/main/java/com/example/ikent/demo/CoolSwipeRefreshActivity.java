@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -29,6 +30,9 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cool_swipe_refresh);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         mSwipeRefreshLayout = (CoolSwipeRefreshLayout) findViewById(R.id.refresh_layout);
         mListView = (ListView) findViewById(R.id.refresh_listview);
@@ -91,11 +95,12 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
         mCount = count;
         mListAdapter.notifyDataSetChanged();
         mSwipeRefreshLayout.setRefreshing(false);
-        mSwipeRefreshLayout.setRefreshEnable(false);
         if (count < 10) {
             mSwipeRefreshLayout.setLoadMoreEnable(false);
+            mSwipeRefreshLayout.setRefreshEnable(false);
         } else {
             mSwipeRefreshLayout.setLoadMoreEnable(true);
+            mSwipeRefreshLayout.setRefreshEnable(true);
         }
     }
 
