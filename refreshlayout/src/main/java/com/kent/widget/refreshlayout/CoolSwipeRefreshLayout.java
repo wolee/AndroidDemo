@@ -23,6 +23,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 
+import java.util.HashMap;
+
 /**
  * Created by lijianfeng on 2016/3/3 下午 8:33 .
  */
@@ -64,7 +66,6 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
     private View mTarget; // the target of the gesture
     private OnSwipeListener mListener;
-    private boolean mRefreshing = false;
     private int mTouchSlop;
     private float mTotalDragDistance = -1;
 
@@ -121,8 +122,6 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
     private float mSpinnerFinalOffset;
 
-    private boolean mRefreshNotify;
-
     private int mCircleWidth;
 
     private int mCircleHeight;
@@ -141,11 +140,11 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            if (mRefreshing) {
+            if (isRefreshing()) {
                 // Make sure the progress view is fully visible
                 mProgress.setAlpha(MAX_ALPHA);
                 mProgress.start();
-                if (mRefreshNotify) {
+                if (isEventNotify(EventType.REFRESH)) {
                     if (mListener != null) {
                         mListener.onRefresh();
                     }
@@ -336,9 +335,12 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
      * @param refreshing Whether or not the view should show refresh progress.
      */
     public void setRefreshing(boolean refreshing) {
-        if (refreshing && mRefreshing != refreshing) {
+        if (!isRefreshEnable()) {
+            return;
+        }
+        if (refreshing && !isRefreshingOrLoadingMore()) {
             // scale and show
-            mRefreshing = refreshing;
+            mRunStatus = new InternalRunStatus(EventType.REFRESH, refreshing);
             int endTarget = 0;
             if (!mUsingCustomStart) {
                 endTarget = (int) (mSpinnerFinalOffset + mOriginalOffsetTop);
@@ -347,7 +349,7 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
             }
             setTargetOffsetTopAndBottom(endTarget - mCurrentTargetOffsetTop,
                     true /* requires update */);
-            mRefreshNotify = false;
+            setEventNotify(EventType.REFRESH, false);
             startScaleUpAnimation(mRefreshListener);
         } else {
             setRefreshing(refreshing, false /* notify */);
@@ -390,11 +392,14 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
     }
 
     private void setRefreshing(boolean refreshing, final boolean notify) {
-        if (mRefreshing != refreshing) {
-            mRefreshNotify = notify;
+        if (!isRefreshEnable()) {
+            return;
+        }
+        if (!isLoadingMore() && isRefreshing() != refreshing) {
+            setEventNotify(EventType.REFRESH, notify);
             ensureTarget();
-            mRefreshing = refreshing;
-            if (mRefreshing) {
+            mRunStatus = new InternalRunStatus(EventType.REFRESH, refreshing);
+            if (isRefreshing()) {
                 animateOffsetToCorrectPosition(mCurrentTargetOffsetTop, mOriginalOffsetTop, mRefreshListener);
             } else {
                 startScaleDownAnimation(mRefreshListener);
@@ -514,7 +519,10 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
      *         progress.
      */
     public boolean isRefreshing() {
-        return mRefreshing;
+        if (mRunStatus != null && mRunStatus.type == EventType.REFRESH) {
+            return mRunStatus.running;
+        }
+        return false;
     }
 
     private void ensureTarget() {
@@ -634,9 +642,11 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
             mReturningToStart = false;
         }
 
+        Log.d(LOG_TAG, "isEnabled=" + isEnabled() + ", isRefreshEnable=" + isRefreshEnable() + ", isLoadMoreEnable=" + isLoadMoreEnable() + ", canChildScrollUp=" + canChildScrollUp() + ", canChildScrollDown=" + canChildScrollDown() + ", isRefreshingOrLoadingMore=" + isRefreshingOrLoadingMore());
+
         if (!isEnabled() || (!isRefreshEnable() && !isLoadMoreEnable())
                 || mReturningToStart || (canChildScrollUp() && canChildScrollDown())
-                || mRefreshing || mLoadingMore || mNestedScrollInProgress) {
+                || isRefreshingOrLoadingMore() || mNestedScrollInProgress) {
             // Fail fast if we're not in a state where a swipe is possible
             return false;
         }
@@ -658,7 +668,7 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                     return false;
                 }
                 mInitialDownY = initialDownY;
-                mMovement = Movement.NONE;
+                mEventType = null;
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -674,23 +684,31 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                 final float yDiff = y - mInitialDownY;
                 Log.d(LOG_TAG, "onInterceptTouchEvent, y=" + y + ", mInitialDownY=" + mInitialDownY + ", yDiff=" + yDiff + ", mTouchSlop=" + mTouchSlop);
                 if (!mIsBeingDragged) {
-                    if (yDiff > mTouchSlop && (mMovement == Movement.NONE || mMovement == Movement.DOWN) && !canChildScrollUp()) {
+                    if (yDiff > mTouchSlop && (mEventType == null || mEventType == EventType.REFRESH) && !canChildScrollUp()) {
                         Log.d(LOG_TAG, "onInterceptTouchEvent, down");
-                        if (mMovement == Movement.NONE) {
+                        if (!isRefreshEnable()) {
+                            Log.d(LOG_TAG, "isRefreshEnable=" + isRefreshEnable());
+                            return false;
+                        }
+                        if (mEventType == null) {
                             setTargetOffsetTopAndBottom(mOriginalOffsetTop - mCircleView.getTop(), true);
                         }
-                        mMovement = Movement.DOWN;
+                        mEventType = EventType.REFRESH;
                         mInitialMotionY = mInitialDownY + mTouchSlop;
                         mProgress.setAlpha(STARTING_PROGRESS_ALPHA);
                         mIsBeingDragged = true;
-                    } else if (yDiff < -mTouchSlop && (mMovement == Movement.NONE || mMovement == Movement.UP) && !canChildScrollDown()) {
+                    } else if (yDiff < -mTouchSlop && (mEventType == null || mEventType == EventType.LOAD_MORE) && !canChildScrollDown()) {
                         Log.d(LOG_TAG, "onInterceptTouchEvent, up");
-                        if (mMovement == Movement.NONE) {
+                        if (!isLoadMoreEnable()) {
+                            Log.d(LOG_TAG, "isLoadMoreEnable=" + isLoadMoreEnable());
+                            return false;
+                        }
+                        if (mEventType == null) {
                             int offsetTop = getMeasuredHeight() - mCircleView.getTop() - mCircleView.getMeasuredHeight() + Math.abs(mOriginalOffsetTop);
                             setTargetOffsetTopAndBottom(offsetTop, true);
                             Log.d(LOG_TAG, "onInterceptTouchEvent, mCircleView.getTop()=" + mCircleView.getTop());
                         }
-                        mMovement = Movement.UP;
+                        mEventType = EventType.LOAD_MORE;
                         mInitialMotionY = mInitialDownY - mTouchSlop;
                         mProgress.setAlpha(STARTING_PROGRESS_ALPHA);
                         mIsBeingDragged = true;
@@ -737,7 +755,7 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-        return isEnabled() && canChildScrollUp() && !mReturningToStart && !mRefreshing
+        return isEnabled() && canChildScrollUp() && !mReturningToStart && !isRefreshing()
                 && (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
     }
 
@@ -902,9 +920,9 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                 (tensionSlingshotPercent / 4), 2)) * 2f;
         float extraMove = (slingshotDist) * tensionPercent * 2;
         int targetY = mCurrentTargetOffsetTop;
-        if (mMovement == Movement.DOWN) {
+        if (mEventType == EventType.REFRESH) {
             targetY = mOriginalOffsetTop + (int) ((slingshotDist * dragPercent) + extraMove);
-        } else if (mMovement == Movement.UP) {
+        } else if (mEventType == EventType.LOAD_MORE) {
             int offsetTop = getMeasuredHeight() - mCircleView.getMeasuredHeight() - mOriginalOffsetTop;
             targetY = offsetTop - (int) ((slingshotDist * dragPercent) + extraMove);
         }
@@ -949,9 +967,9 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
     private void finishSpinner(float overscroll) {
         Log.d(LOG_TAG, "finishSpinner, overscroll=" + overscroll + ", mTotalDragDistance=" + mTotalDragDistance + ", mCurrentTargetOffsetTop=" + mCurrentTargetOffsetTop);
         if (Math.abs(overscroll) > mTotalDragDistance) {
-            if (mMovement == Movement.DOWN) {
+            if (mEventType == EventType.REFRESH) {
                 setRefreshing(true, true /* notify */);
-            } else if (mMovement == Movement.UP) {
+            } else if (mEventType == EventType.LOAD_MORE) {
                 setLoadingMore(true, true/* notify */);
             }
         } else {
@@ -969,7 +987,7 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                         if (!mScale) {
                             startScaleDownAnimation(null);
                         }
-                        mMovement = Movement.NONE;
+                        mEventType = null;
                     }
 
                     @Override
@@ -979,11 +997,15 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                 };
             }
             int end = mOriginalOffsetTop;
-            if (mMovement == Movement.DOWN) {
-                mRefreshing = false;
+            if (mEventType == EventType.REFRESH) {
+                if (mRunStatus != null && mRunStatus.type == EventType.REFRESH) {
+                    mRunStatus.running = false;
+                }
                 end = mOriginalOffsetTop;
-            } else if (mMovement == Movement.UP) {
-                mLoadingMore = false;
+            } else if (mEventType == EventType.LOAD_MORE) {
+                if (mRunStatus != null && mRunStatus.type == EventType.LOAD_MORE) {
+                    mRunStatus.running = false;
+                }
                 end = getMeasuredHeight() - mOriginalOffsetTop - mCircleView.getMeasuredHeight();
             }
             animateOffsetToStartPosition(mCurrentTargetOffsetTop, end, listener);
@@ -1003,7 +1025,7 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
         if (!isEnabled() || (!isRefreshEnable() && !isLoadMoreEnable())
                 || mReturningToStart || (canChildScrollUp() && canChildScrollDown())
-                || mRefreshing || mLoadingMore || mNestedScrollInProgress) {
+                || isRefreshingOrLoadingMore() || mNestedScrollInProgress) {
             // Fail fast if we're not in a state where a swipe is possible
             return false;
         }
@@ -1034,8 +1056,8 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                 final float overscroll = (y - mInitialMotionY) * DRAG_RATE;
                 if (mIsBeingDragged) {
                     Log.d(LOG_TAG, "onTouchEvent, overscroll=" + overscroll);
-                    if ((overscroll > 0 && mMovement == Movement.DOWN) /* pull down refresh */
-                            || (overscroll < 0 && mMovement == Movement.UP)/* pull up load more */) {
+                    if ((overscroll > 0 && mEventType == EventType.REFRESH) /* pull down refresh */
+                            || (overscroll < 0 && mEventType == EventType.LOAD_MORE)/* pull up load more */) {
                         moveSpinner(overscroll);
                     } else {
                         return false;
@@ -1067,11 +1089,11 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
                 final float overscroll = (y - mInitialMotionY) * DRAG_RATE;
                 mIsBeingDragged = false;
-                if (mMovement == Movement.DOWN /* pull down finish refresh */
-                        || mMovement == Movement.UP /* pull up finish load more */) {
+                if (mEventType == EventType.REFRESH /* pull down finish refresh */
+                        || mEventType == EventType.LOAD_MORE /* pull up finish load more */) {
                     finishSpinner(overscroll);
                 }
-                mMovement = Movement.NONE;
+                mEventType = null;
                 mActivePointerId = INVALID_POINTER;
                 return false;
             }
@@ -1200,11 +1222,9 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
 
     // custom code
-    private Movement mMovement;
-    private boolean mRefreshEnable = true;
-    private boolean mLoadMoreEnable = true;
-    private boolean mLoadingMore = false;
-    private boolean mLoadMoreNotify;
+    private EventType mEventType;
+    private InternalRunStatus mRunStatus;
+    private HashMap<EventType, InternalEnableStatus> mEnableStatusMap = new HashMap<EventType, InternalEnableStatus>();
     private int mEndPos;
     private Animation.AnimationListener mLoadMoreListener = new Animation.AnimationListener() {
         @Override
@@ -1217,11 +1237,11 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            if (mLoadingMore) {
+            if (isRefreshingOrLoadingMore()) {
                 // Make sure the progress view is fully visible
                 mProgress.setAlpha(MAX_ALPHA);
                 mProgress.start();
-                if (mLoadMoreNotify) {
+                if (isEventNotify(EventType.LOAD_MORE)) {
                     if (mListener != null) {
                         mListener.onLoadMore();
                     }
@@ -1234,29 +1254,72 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
     };
 
     public void setRefreshEnable(boolean refreshEnable) {
-        mRefreshEnable = refreshEnable;
+        setEventEnable(EventType.REFRESH, refreshEnable);
     }
 
     public boolean isRefreshEnable() {
-        return mRefreshEnable;
+        return isEventEnable(EventType.REFRESH);
     }
 
     public void setLoadMoreEnable(boolean loadMorenable) {
-        this.mLoadMoreEnable = loadMorenable;
+        setEventEnable(EventType.LOAD_MORE, loadMorenable);
     }
 
     public boolean isLoadMoreEnable() {
-        return mLoadMoreEnable;
+        return isEventEnable(EventType.LOAD_MORE);
     }
 
-    public boolean isLoadingMore() {
-        return mLoadingMore;
+    private InternalEnableStatus getEventEnableStatus(EventType type) {
+        InternalEnableStatus status = mEnableStatusMap.get(type);
+        if (status == null) {
+            status = new InternalEnableStatus();
+            status.enable = true;
+            mEnableStatusMap.put(type, status);
+        }
+        return status;
+    }
+
+    private void setEventEnable(EventType type, boolean enable) {
+        InternalEnableStatus status = getEventEnableStatus(type);
+        status.enable = enable;
+    }
+
+    private boolean isEventEnable(EventType type) {
+        InternalEnableStatus status = getEventEnableStatus(type);
+        return status.enable;
+    }
+
+    private void setEventNotify(EventType type, boolean notify) {
+        InternalEnableStatus status = getEventEnableStatus(type);
+        status.notify = notify;
+    }
+
+    private boolean isEventNotify(EventType type) {
+        InternalEnableStatus status = getEventEnableStatus(type);
+        return status.notify;
+    }
+
+    private boolean isLoadingMore() {
+        if (mRunStatus != null && mRunStatus.type == EventType.LOAD_MORE) {
+            return mRunStatus.running;
+        }
+        return false;
+    }
+
+    public boolean isRefreshingOrLoadingMore() {
+        if (isRefreshing() || isLoadingMore()) {
+            return true;
+        }
+        return false;
     }
 
     public void setLoadingMore(boolean loadingMore) {
-        if (loadingMore && mLoadingMore != loadingMore) {
+        if (!isLoadMoreEnable()) {
+            return;
+        }
+        if (loadingMore && !isRefreshingOrLoadingMore()) {
             // scale and show
-            mLoadingMore = loadingMore;
+            mRunStatus = new InternalRunStatus(EventType.LOAD_MORE, loadingMore);
             int offset = getMeasuredHeight() - mOriginalOffsetTop - mCircleView.getMeasuredHeight();
             int endTarget = 0;
             if (!mUsingCustomStart) {
@@ -1266,7 +1329,7 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
             }
             setTargetOffsetTopAndBottom(endTarget - mCurrentTargetOffsetTop,
                     true /* requires update */);
-            mLoadMoreNotify = false;
+            setEventNotify(EventType.LOAD_MORE, false);
             startScaleUpAnimation(mLoadMoreListener);
         } else {
             setLoadingMore(loadingMore, false /* notify */);
@@ -1274,11 +1337,14 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
     }
 
     private void setLoadingMore(boolean loadingMore, boolean notify) {
-        if (mLoadingMore != loadingMore) {
-            mLoadMoreNotify = notify;
+        if (!isLoadMoreEnable()) {
+            return;
+        }
+        if (!isRefreshing() && isLoadingMore() != loadingMore) {
+            setEventNotify(EventType.LOAD_MORE, notify);
             ensureTarget();
-            mLoadingMore = loadingMore;
-            if (mLoadingMore) {
+            mRunStatus = new InternalRunStatus(EventType.LOAD_MORE, loadingMore);
+            if (isLoadingMore()) {
                 int end = getMeasuredHeight() - mOriginalOffsetTop - mCircleView.getMeasuredHeight();
                 animateOffsetToCorrectPosition(mCurrentTargetOffsetTop, end, mLoadMoreListener);
             } else {
@@ -1308,12 +1374,31 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
         }
     }
 
-    public enum Movement {
-        NONE, DOWN, UP
-    }
-
     public interface OnSwipeListener {
         void onRefresh();
         void onLoadMore();
+    }
+
+
+    private enum EventType {
+        REFRESH, LOAD_MORE
+    }
+
+
+    private class InternalRunStatus {
+        boolean running;
+        EventType type;
+        public InternalRunStatus() {
+
+        }
+        public InternalRunStatus(EventType type, boolean running) {
+            this.type = type;
+            this.running = running;
+        }
+    }
+
+    private class InternalEnableStatus {
+        boolean enable = true;
+        boolean notify = true;
     }
 }

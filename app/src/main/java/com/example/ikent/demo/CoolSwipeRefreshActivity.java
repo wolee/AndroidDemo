@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -15,7 +16,7 @@ import java.util.Random;
 
 public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolSwipeRefreshLayout.OnSwipeListener {
 
-    private static final String TAG = "CoolSwipeRefreshActivity";
+    private static final String TAG = "CoolSwipeRefresh";
 
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private CoolSwipeRefreshLayout mSwipeRefreshLayout;
@@ -51,8 +52,7 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
 
         mListView.setAdapter(mListAdapter);
         mSwipeRefreshLayout.setOnSwipeListener(this);
-
-        autoLoadMore();
+        autoRefresh();
     }
 
     private void autoRefresh() {
@@ -62,7 +62,7 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
                 mSwipeRefreshLayout.setRefreshing(true);
                 onRefresh();
             }
-        }, 2000);
+        }, 1000);
     }
 
     private void autoLoadMore() {
@@ -72,7 +72,7 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
                 mSwipeRefreshLayout.setLoadingMore(true);
                 onLoadMore();
             }
-        }, 2000);
+        }, 1000);
     }
 
     @Override
@@ -86,10 +86,17 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
     }
 
     private void onRefreshComplete(int index, int count) {
+        Log.d(TAG, "onRefreshComplete add count=" + count);
         mIndex = index;
         mCount = count;
         mListAdapter.notifyDataSetChanged();
         mSwipeRefreshLayout.setRefreshing(false);
+        mSwipeRefreshLayout.setRefreshEnable(false);
+        if (count < 10) {
+            mSwipeRefreshLayout.setLoadMoreEnable(false);
+        } else {
+            mSwipeRefreshLayout.setLoadMoreEnable(true);
+        }
     }
 
     private void onLoadMoreComplete(int addCount) {
