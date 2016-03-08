@@ -642,8 +642,6 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
             mReturningToStart = false;
         }
 
-        Log.d(LOG_TAG, "isEnabled=" + isEnabled() + ", isRefreshEnable=" + isRefreshEnable() + ", isLoadMoreEnable=" + isLoadMoreEnable() + ", canChildScrollUp=" + canChildScrollUp() + ", canChildScrollDown=" + canChildScrollDown() + ", isRefreshingOrLoadingMore=" + isRefreshingOrLoadingMore());
-
         if (!isEnabled() || (!isRefreshEnable() && !isLoadMoreEnable())
                 || mReturningToStart || (canChildScrollUp() && canChildScrollDown())
                 || isRefreshingOrLoadingMore() || mNestedScrollInProgress) {
