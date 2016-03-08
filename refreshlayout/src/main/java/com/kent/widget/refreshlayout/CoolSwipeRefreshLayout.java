@@ -1260,11 +1260,11 @@ public class CoolSwipeRefreshLayout extends ViewGroup implements NestedScrolling
             int offset = getMeasuredHeight() - mOriginalOffsetTop - mCircleView.getMeasuredHeight();
             int endTarget = 0;
             if (!mUsingCustomStart) {
-                endTarget = (int) (mSpinnerFinalOffset + offset);
+                endTarget = (int) (offset - mSpinnerFinalOffset);
             } else {
-                endTarget = (int) mSpinnerFinalOffset;
+                endTarget = (int) (getMeasuredHeight() - mSpinnerFinalOffset);
             }
-            setTargetOffsetTopAndBottom(endTarget - offset,
+            setTargetOffsetTopAndBottom(endTarget - mCurrentTargetOffsetTop,
                     true /* requires update */);
             mLoadMoreNotify = false;
             startScaleUpAnimation(mLoadMoreListener);

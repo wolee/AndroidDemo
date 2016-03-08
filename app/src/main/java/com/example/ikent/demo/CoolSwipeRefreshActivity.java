@@ -52,13 +52,27 @@ public class CoolSwipeRefreshActivity extends AppCompatActivity implements CoolS
         mListView.setAdapter(mListAdapter);
         mSwipeRefreshLayout.setOnSwipeListener(this);
 
-        mHandler.post(new Runnable() {
+        autoLoadMore();
+    }
+
+    private void autoRefresh() {
+        mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 mSwipeRefreshLayout.setRefreshing(true);
                 onRefresh();
             }
-        });
+        }, 2000);
+    }
+
+    private void autoLoadMore() {
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setLoadingMore(true);
+                onLoadMore();
+            }
+        }, 2000);
     }
 
     @Override
