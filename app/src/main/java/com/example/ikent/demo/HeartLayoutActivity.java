@@ -1,6 +1,5 @@
 package com.example.ikent.demo;
 
-import android.graphics.Color;
 import android.os.Bundle;
 
 import com.example.ikent.BaseActivity;
@@ -22,17 +21,19 @@ public class HeartLayoutActivity extends BaseActivity {
         setContentView(R.layout.activity_heart_layout);
 
         mHeartLayout = (HeartLayout) findViewById(R.id.heart_layout);
-        mTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                mHeartLayout.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mHeartLayout.addHeart(randomColor());
-                    }
-                });
-            }
-        }, 500, 200);
+        repeat();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mHeartLayout.aminResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mHeartLayout.aminPause();
     }
 
     @Override
@@ -41,8 +42,33 @@ public class HeartLayoutActivity extends BaseActivity {
         mTimer.cancel();
     }
 
-    private int randomColor() {
-        return Color.rgb(mRandom.nextInt(255), mRandom.nextInt(255), mRandom.nextInt(255));
+    private void repeat() {
+        mTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                mHeartLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mHeartLayout.showHeartNow(randomResId());
+                    }
+                });
+            }
+        }, 50, 100);
+    }
+
+    private void oneTime() {
+        mHeartLayout.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mHeartLayout.showHeartNow(randomResId());
+            }
+        }, 1000);
+    }
+
+    private int randomResId() {
+        int index = mRandom.nextInt(HeartLayout.HEART_RES_IDS.length);
+        int resId = HeartLayout.HEART_RES_IDS[index];
+        return resId;
     }
 
 }

@@ -22,7 +22,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.Transformation;
 
@@ -38,7 +41,7 @@ public class PathAnimator extends AbstractPathAnimator {
     }
 
     @Override
-    public void start(final HeartView child, final HeartLayout parent) {
+    public void start(final View child, final ViewGroup parent) {
         parent.addView(child, new ViewGroup.LayoutParams(mConfig.heartWidth, mConfig.heartHeight));
         FloatAnimation anim = new FloatAnimation(createPath(mCounter, parent, 2), randomRotation(), parent, child);
         anim.setDuration(mConfig.animDuration);
@@ -61,21 +64,20 @@ public class PathAnimator extends AbstractPathAnimator {
             }
 
             @Override
-            public void onAnimationStart(Animation animation) {
+            public void onAnimationStart(final Animation animation) {
                 mCounter.incrementAndGet();
             }
         });
-        anim.setInterpolator(new LinearInterpolator());
         child.startAnimation(anim);
     }
 
     static class FloatAnimation extends Animation {
         private PathMeasure mPm;
-        private HeartView mView;
+        private View mView;
         private float mDistance;
         private float mRotation;
 
-        public FloatAnimation(Path path, float rotation, HeartLayout parent, HeartView child) {
+        public FloatAnimation(Path path, float rotation, View parent, View child) {
             mPm = new PathMeasure(path, false);
             mDistance = mPm.getLength();
             mView = child;
@@ -85,14 +87,15 @@ public class PathAnimator extends AbstractPathAnimator {
 
         @Override
         protected void applyTransformation(float factor, Transformation transformation) {
+            android.util.Log.v("FloatAnimation", "factor=" + factor);
             Matrix matrix = transformation.getMatrix();
             mPm.getMatrix(mDistance * factor, matrix, PathMeasure.POSITION_MATRIX_FLAG);
             mView.setRotation(mRotation * factor);
             float scale = 1F;
             if (3000.0F * factor < 200.0F) {
-                scale = scale(factor, 0.0D, 0.06666667014360428D, 0.20000000298023224D, 1.100000023841858D);
+                scale = scale(factor, 0.0D, 0.06666667014360428D, 0.20000000298023224D, 1.500000023841858D);
             } else if (3000.0F * factor < 300.0F) {
-                scale = scale(factor, 0.06666667014360428D, 0.10000000149011612D, 1.100000023841858D, 1.0D);
+                scale = scale(factor, 0.06666667014360428D, 0.10000000149011612D, 1.500000023841858D, 1.0D);
             }
             mView.setScaleX(scale);
             mView.setScaleY(scale);

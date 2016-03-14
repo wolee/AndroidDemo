@@ -12,6 +12,9 @@
 
     <com.kent.widget.heartlayout.HeartLayout
         android:id="@+id/heart_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:background="#e0ffffff"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="70dp"
+        android:layout_height="400dp"/>
 </RelativeLayout>

@@ -19,12 +19,12 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Path;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.example.ikent.heartlayout.R;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 public abstract class AbstractPathAnimator {
     private final Random mRandom;
@@ -37,7 +37,7 @@ public abstract class AbstractPathAnimator {
     }
 
     public float randomRotation() {
-        return mRandom.nextFloat() * 28.6F - 14.3F;
+        return mRandom.nextFloat() * 120.0F - 60.0F;
     }
 
     public Path createPath(AtomicInteger counter, View view, int factor) {
@@ -68,7 +68,7 @@ public abstract class AbstractPathAnimator {
         return p;
     }
 
-    public abstract void start(HeartView child, HeartLayout parent);
+    public abstract void start(View child, ViewGroup parent);
 
     public void setInitX(int initX) {
         if (mConfig != null) {
