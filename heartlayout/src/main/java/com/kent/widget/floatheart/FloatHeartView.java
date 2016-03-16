@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
@@ -16,11 +15,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.Interpolator;
-import android.view.animation.Transformation;
+import android.view.animation.*;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -38,7 +33,7 @@ import java.util.Random;
 public class FloatHeartView extends FrameLayout {
     public static final String TAG = "FloatHeartView";
 
-    private static final float HEART_ROTATE_RANGE = 120;
+    private static final float HEART_ROTATE_RANGE = 100;
     private static final float HEART_SCALES[] = {1.30f, 1.10f, 1.00f, 0.85f, 0.90f, 1.20f, 0.95f, 1.25f, 1.15f, 0.75f, 0.70f, 0.80f, 1.25f, 1.05f, 1.35f};
     private static final int HEART_DURATION[] = {4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 6800, 6900, 6000};
 
@@ -52,8 +47,8 @@ public class FloatHeartView extends FrameLayout {
     private static final float RATIO = 0.2f;
     private static final boolean DEBUG = false;
 
-    private static final boolean SCALE_ENABLE = false;
-    private static final boolean ROTATE_ENABLE = false;
+    private static final boolean SCALE_ENABLE = true;
+    private static final boolean ROTATE_ENABLE = true;
 
     public static final int[] HEART_RES_IDS = {
             R.mipmap.like_other1,
@@ -131,7 +126,6 @@ public class FloatHeartView extends FrameLayout {
 
         mBeginWaitTs = 0;
         mLastAddTs = now;
-        setLayerType(View.LAYER_TYPE_HARDWARE, null);
         HeartHolder heart = new HeartHolder(resId);
         heart.showHeart();
 
@@ -185,25 +179,24 @@ public class FloatHeartView extends FrameLayout {
     private class HeartHolder extends Animation implements Animation.AnimationListener{
         private final Path path;
         private final float rotate;
-        private  final Paint paint;
         private final float scale;
-        private final int duration;
         private final PathMeasure pathMeasure;
         private final List<CPoint> points;
         private final int heartWidth;
         private final int heartHeight;
         private final ImageView heartView;
+        private final float pathLength;
 
-        private long animStartTime;
+        private long startTime;
 
         public HeartHolder(int resId) {
             rotate = mRandom.nextFloat() * HEART_ROTATE_RANGE - HEART_ROTATE_RANGE / 2;
-            if (SCALE_ENABLE) {
-                scale = HEART_SCALES[mRandom.nextInt(HEART_SCALES.length)];
-            } else {
-                scale = 1.0f;
-            }
-            duration = HEART_DURATION[mRandom.nextInt(HEART_DURATION.length)];
+            scale = SCALE_ENABLE ? HEART_SCALES[mRandom.nextInt(HEART_SCALES.length)] : 1.0f;
+
+            setStartOffset(ANIM_SCALE_DURATION);
+            setDuration(HEART_DURATION[mRandom.nextInt(HEART_DURATION.length)]);
+            setInterpolator(new LinearInterpolator());
+            setAnimationListener(this);
 
             Bitmap bitmap = getBitmap(resId);
             heartWidth = bitmap.getWidth();
@@ -217,19 +210,12 @@ public class FloatHeartView extends FrameLayout {
             points = getPoints(start);
             path = builderPath(points);
             pathMeasure = new PathMeasure(path, false);
-
-            paint = new Paint();
-            paint.setAntiAlias(true);
-
-
-            setStartOffset(ANIM_SCALE_DURATION);
-            setDuration(duration);
-            setInterpolator(mTranslateInterpolator);
-            setAnimationListener(this);
+            pathLength = pathMeasure.getLength();
         }
 
         public void showHeart() {
             addView(heartView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            setLayerType(View.LAYER_TYPE_HARDWARE, null);
             if (ROTATE_ENABLE) {
                 heartView.setRotation(rotate);
             }
@@ -238,7 +224,7 @@ public class FloatHeartView extends FrameLayout {
 
         @Override
         public void onAnimationStart(Animation animation) {
-            animStartTime = SystemClock.elapsedRealtime();
+            startTime = SystemClock.elapsedRealtime();
         }
 
         @Override
@@ -253,22 +239,23 @@ public class FloatHeartView extends FrameLayout {
 
         @Override
         protected void applyTransformation(float interpolatedTime, Transformation transformation) {
+            float translateTime = mTranslateInterpolator.getInterpolation(interpolatedTime);
             float[] pos = new float[2];
-            pathMeasure.getPosTan(pathMeasure.getLength() * interpolatedTime, pos, null);
+            pathMeasure.getPosTan(pathLength * translateTime, pos, null);
             float x = pos[0];
             float y = pos[1];
 
             long now = SystemClock.elapsedRealtime();
             long spend;
-            if (animStartTime == 0) {
+            if (startTime == 0) {
                 spend = 0;
             } else {
-                spend = now - animStartTime;
+                spend = now - startTime;
             }
-            if (spend <= ANIM_SCALE_DURATION) {
-                float percent = spend * 1.0f / ANIM_SCALE_DURATION;
+            if (spend <= getStartOffset()) {
+                float percent = spend * 1.0f / getStartOffset();
                 percent = mScaleInterpolator.getInterpolation(percent);
-                setScale(percent, transformation, x, y);
+                setScale(percent, x, y);
                 return;
             }
 
@@ -276,32 +263,29 @@ public class FloatHeartView extends FrameLayout {
             heartView.setScaleY(scale);
 
             float rightY = y - (heartHeight - (heartHeight - heartHeight * scale) / 2);
-            Matrix matrix = transformation.getMatrix();
-            matrix.setTranslate(x - heartWidth / 2.0f, rightY);
+            float offsetTop = rightY - heartView.getTop();
+            float offsetLeft = x - heartWidth / 2.0f - heartView.getLeft();
 
-            setAlpha(transformation);
+            heartView.offsetTopAndBottom((int) offsetTop);
+            heartView.offsetLeftAndRight((int) offsetLeft);
+
+            float alpha = 1 - mAlphaInterpolator.getInterpolation(interpolatedTime);
+            heartView.setAlpha(alpha);
         }
 
-        private void setScale(float interpolatedTime, Transformation transformation, float x, float y) {
+        private void setScale(float interpolatedTime, float x, float y) {
             float tempScale = scale * interpolatedTime;
             heartView.setScaleX(tempScale);
             heartView.setScaleY(tempScale);
 
             float rightY = y - (heartHeight - (heartHeight - heartHeight * tempScale) / 2);
+            float offsetTop = rightY - heartView.getTop();
+            float offsetLeft = x - heartWidth / 2.0f - heartView.getLeft();
 
-            Matrix matrix = transformation.getMatrix();
-            matrix.setTranslate(x - heartWidth / 2.0f, rightY);
-            transformation.setAlpha(1);
-        }
+            heartView.offsetTopAndBottom((int) offsetTop);
+            heartView.offsetLeftAndRight((int) offsetLeft);
 
-        private void setAlpha(Transformation transformation) {
-            long now = SystemClock.elapsedRealtime();
-            long startAlphaTime = animStartTime + getStartOffset();
-            long time = now - startAlphaTime;
-            time = Math.min(Math.max(time, 0), getDuration());
-            float percent = time * 1.0f / getDuration();
-            float alpha = 1 - mAlphaInterpolator.getInterpolation(percent);
-            transformation.setAlpha(alpha);
+            heartView.setAlpha(1.0f);
         }
 
         private List<CPoint> getPoints(CPoint start) {
