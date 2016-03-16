@@ -52,6 +52,9 @@ public class FloatHeartView extends FrameLayout {
     private static final float RATIO = 0.2f;
     private static final boolean DEBUG = false;
 
+    private static final boolean SCALE_ENABLE = false;
+    private static final boolean ROTATE_ENABLE = false;
+
     public static final int[] HEART_RES_IDS = {
             R.mipmap.like_other1,
             R.mipmap.like_other2,
@@ -69,8 +72,6 @@ public class FloatHeartView extends FrameLayout {
     private final Interpolator mTranslateInterpolator = new DecelerateInterpolator(0.55f);
     private final Interpolator mScaleInterpolator = new AccelerateInterpolator(0.55f);
     private final Interpolator mAlphaInterpolator = new AccelerateInterpolator(2);
-
-    private long mLastAddTs;
 
     public FloatHeartView(Context context) {
         this(context, null);
@@ -93,11 +94,21 @@ public class FloatHeartView extends FrameLayout {
         removeAllViews();
     }
 
+    public void aminPause() {
+        mAddHeartEnable = false;
+    }
+
+    public void aminResume() {
+        mAddHeartEnable = true;
+    }
+
+    private boolean mAddHeartEnable;
+    private long mLastAddTs;
     private long mBeginWaitTs = 0;
     public void addHeart(final int resId) {
         long now = SystemClock.elapsedRealtime();
         int childCount = getChildCount();
-        if (Math.abs(now - mLastAddTs) < MIN_ADD_INTERVAL || childCount > MAX_CHILD_COUNT) {
+        if (!mAddHeartEnable || Math.abs(now - mLastAddTs) < MIN_ADD_INTERVAL || childCount > MAX_CHILD_COUNT) {
             Log.e(TAG, "addHeart abandon");
             return;
         }
@@ -120,6 +131,7 @@ public class FloatHeartView extends FrameLayout {
 
         mBeginWaitTs = 0;
         mLastAddTs = now;
+        setLayerType(View.LAYER_TYPE_HARDWARE, null);
         HeartHolder heart = new HeartHolder(resId);
         heart.showHeart();
 
@@ -186,7 +198,11 @@ public class FloatHeartView extends FrameLayout {
 
         public HeartHolder(int resId) {
             rotate = mRandom.nextFloat() * HEART_ROTATE_RANGE - HEART_ROTATE_RANGE / 2;
-            scale = HEART_SCALES[mRandom.nextInt(HEART_SCALES.length)];
+            if (SCALE_ENABLE) {
+                scale = HEART_SCALES[mRandom.nextInt(HEART_SCALES.length)];
+            } else {
+                scale = 1.0f;
+            }
             duration = HEART_DURATION[mRandom.nextInt(HEART_DURATION.length)];
 
             Bitmap bitmap = getBitmap(resId);
@@ -214,7 +230,9 @@ public class FloatHeartView extends FrameLayout {
 
         public void showHeart() {
             addView(heartView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            heartView.setRotation(rotate);
+            if (ROTATE_ENABLE) {
+                heartView.setRotation(rotate);
+            }
             heartView.startAnimation(this);
         }
 

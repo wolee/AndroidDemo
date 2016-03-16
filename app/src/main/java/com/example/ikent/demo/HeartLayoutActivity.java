@@ -37,6 +37,7 @@ public class HeartLayoutActivity extends BaseActivity {
         super.onResume();
         mHeartLayout.aminResume();
         mFloatHeart.startFloatAnim();
+        mFloatHeartView.aminResume();
     }
 
     @Override
@@ -44,6 +45,7 @@ public class HeartLayoutActivity extends BaseActivity {
         super.onPause();
         mHeartLayout.aminPause();
         mFloatHeart.stopFloatAnim();
+        mFloatHeartView.aminPause();
     }
 
     @Override
