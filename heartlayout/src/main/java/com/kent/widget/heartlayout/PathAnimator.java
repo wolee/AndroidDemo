@@ -45,7 +45,7 @@ public class PathAnimator extends AbstractPathAnimator {
         parent.addView(child, new ViewGroup.LayoutParams(mConfig.heartWidth, mConfig.heartHeight));
         FloatAnimation anim = new FloatAnimation(createPath(mCounter, parent, 2), randomRotation(), parent, child);
         anim.setDuration(mConfig.animDuration);
-        anim.setInterpolator(new LinearInterpolator());
+        anim.setInterpolator(new AccelerateDecelerateInterpolator());
         anim.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationEnd(Animation animation) {
