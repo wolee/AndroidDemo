@@ -9,6 +9,8 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
@@ -32,13 +34,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by lijianfeng on 2016/3/14 下午 4:04 .
  */
 public class FloatHeartSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
-    public static final String TAG = "FloatHeartView";
+    public static final String TAG = "FloatHeartSurfaceView";
 
     private static final float HEART_ROTATE_RANGE = 120;
     private static final float HEART_SCALES[] = {0.65f, 1.30f, 1.10f, 1.00f, 0.60f, 0.85f, 0.90f, 1.20f, 0.95f, 1.25f, 1.15f, 0.75f, 0.70f, 0.80f, 1.25f, 1.05f, 1.35f};
     private static final int HEART_DURATION[] = {5500, 5600, 5700, 5800, 5900, 6000, 6100, 6200, 6300, 6400, 6500, 6600, 6700, 6800, 6900, 7000};
 
-    private static final long DEFAULT_FRAME_DELAY = 10;
+    private static final long DEFAULT_FRAME_DELAY = 16;
     private static final int DEFAULT_QUEUE_SIZE = 50;
     private static final int DEFAULT_ADD_INTERVAL = 200;
     /** 曲线高度个数分割 */
@@ -86,6 +88,8 @@ public class FloatHeartSurfaceView extends SurfaceView implements SurfaceHolder.
         super(context, attrs, defStyleAttr);
         mHolder = getHolder();
         mHolder.addCallback(this);
+        setZOrderOnTop(true);
+        mHolder.setFormat(PixelFormat.TRANSPARENT);//设置背景透明
         mHeartQueue = new ArrayList<HeartPath>();
         mBitmapMap = new HashMap<Integer, WeakReference<Bitmap>>();
 
@@ -212,7 +216,7 @@ public class FloatHeartSurfaceView extends SurfaceView implements SurfaceHolder.
             Log.e(TAG, "canvas is null");
             return;
         }
-        canvas.drawColor(Color.WHITE);
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);//清除屏幕
         List<HeartPath> removes = new ArrayList<HeartPath>();
         for (int i = 0; i < mHeartQueue.size(); i++) {
             HeartPath heartPath = mHeartQueue.get(i);
@@ -314,7 +318,7 @@ public class FloatHeartSurfaceView extends SurfaceView implements SurfaceHolder.
             x = pos[0];
             y = pos[1];
 
-            Log.d(TAG, "HeartPath draw factor=" + factor);
+            Log.d(TAG, "HeartView draw factor=" + factor);
             float tempScale = scale;
             if (3000.0F * factor < 200.0F) {
                 tempScale = scale(factor, 0.0D, 0.06666667014360428D, 0.20000000298023224D, scale);
@@ -334,7 +338,7 @@ public class FloatHeartSurfaceView extends SurfaceView implements SurfaceHolder.
             matrix.postTranslate(x - bitmap.getWidth() / 2.0f, y - bitmap.getHeight()  * tempScale);
 
             canvas.drawBitmap(bitmap, matrix, paint);
-            Log.d(TAG, "HeartPath draw x=" + x + ", y=" + y + ", alpha=" + alpha + ", rotate=" + rotate);
+            Log.d(TAG, "HeartView draw x=" + x + ", y=" + y + ", alpha=" + alpha + ", rotate=" + rotate);
             return true;
         }
 

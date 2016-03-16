@@ -5,6 +5,7 @@ import android.os.Bundle;
 import com.example.ikent.BaseActivity;
 import com.example.ikent.R;
 import com.kent.widget.floatheart.FloatHeartSurfaceView;
+import com.kent.widget.floatheart.FloatHeartView;
 import com.kent.widget.heartlayout.HeartLayout;
 
 import java.util.Random;
@@ -16,6 +17,7 @@ public class HeartLayoutActivity extends BaseActivity {
     private Timer mTimer = new Timer();
     private HeartLayout mHeartLayout;
     private FloatHeartSurfaceView mFloatHeart;
+    private FloatHeartView mFloatHeartView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,8 +26,10 @@ public class HeartLayoutActivity extends BaseActivity {
 
         mHeartLayout = (HeartLayout) findViewById(R.id.heart_layout);
         mFloatHeart = (FloatHeartSurfaceView) findViewById(R.id.float_heart);
+        mFloatHeartView = (FloatHeartView) findViewById(R.id.float_heart_view);
         repeat();
         mFloatHeart.addHeart(floatHeartRandomResId());
+        mFloatHeartView.addHeart(floatHeartViewRandomResId());
     }
 
     @Override
@@ -58,6 +62,7 @@ public class HeartLayoutActivity extends BaseActivity {
                     public void run() {
                         mHeartLayout.showHeartNow(randomResId());
                         mFloatHeart.addHeart(floatHeartRandomResId());
+                        mFloatHeartView.addHeart(floatHeartViewRandomResId());
                     }
                 });
             }
@@ -85,4 +90,9 @@ public class HeartLayoutActivity extends BaseActivity {
         return resId;
     }
 
+    private int floatHeartViewRandomResId() {
+        int index = mRandom.nextInt(FloatHeartView.HEART_RES_IDS.length);
+        int resId = FloatHeartView.HEART_RES_IDS[index];
+        return resId;
+    }
 }
