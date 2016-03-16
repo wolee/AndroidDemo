@@ -18,7 +18,7 @@
         android:layout_width="70dp"
         android:layout_height="400dp"/>
 
-    <com.kent.widget.floatheart.FloatHeartView
+    <com.kent.widget.floatheart.FloatHeartSurfaceView
         android:id="@+id/float_heart"
         android:layout_width="70dp"
         android:layout_height="400dp"

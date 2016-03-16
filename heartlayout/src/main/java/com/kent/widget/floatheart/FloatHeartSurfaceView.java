@@ -18,7 +18,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 
 import com.example.ikent.heartlayout.R;
 
@@ -32,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by lijianfeng on 2016/3/14 下午 4:04 .
  */
-public class FloatHeartView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
+public class FloatHeartSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
     public static final String TAG = "FloatHeartView";
 
     private static final float HEART_ROTATE_RANGE = 120;
@@ -75,15 +74,15 @@ public class FloatHeartView extends SurfaceView implements SurfaceHolder.Callbac
     private final Random mRandom = new Random();
     private AtomicBoolean mRunable = new AtomicBoolean(false);
 
-    public FloatHeartView(Context context) {
+    public FloatHeartSurfaceView(Context context) {
         this(context, null);
     }
 
-    public FloatHeartView(Context context, AttributeSet attrs) {
+    public FloatHeartSurfaceView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public FloatHeartView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FloatHeartSurfaceView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mHolder = getHolder();
         mHolder.addCallback(this);

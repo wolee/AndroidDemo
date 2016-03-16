@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.example.ikent.BaseActivity;
 import com.example.ikent.R;
-import com.kent.widget.floatheart.FloatHeartView;
+import com.kent.widget.floatheart.FloatHeartSurfaceView;
 import com.kent.widget.heartlayout.HeartLayout;
 
 import java.util.Random;
@@ -15,7 +15,7 @@ public class HeartLayoutActivity extends BaseActivity {
     private Random mRandom = new Random();
     private Timer mTimer = new Timer();
     private HeartLayout mHeartLayout;
-    private FloatHeartView mFloatHeart;
+    private FloatHeartSurfaceView mFloatHeart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +23,7 @@ public class HeartLayoutActivity extends BaseActivity {
         setContentView(R.layout.activity_heart_layout);
 
         mHeartLayout = (HeartLayout) findViewById(R.id.heart_layout);
-        mFloatHeart = (FloatHeartView) findViewById(R.id.float_heart);
+        mFloatHeart = (FloatHeartSurfaceView) findViewById(R.id.float_heart);
         repeat();
         mFloatHeart.addHeart(floatHeartRandomResId());
     }
@@ -80,8 +80,8 @@ public class HeartLayoutActivity extends BaseActivity {
     }
 
     private int floatHeartRandomResId() {
-        int index = mRandom.nextInt(FloatHeartView.HEART_RES_IDS.length);
-        int resId = FloatHeartView.HEART_RES_IDS[index];
+        int index = mRandom.nextInt(FloatHeartSurfaceView.HEART_RES_IDS.length);
+        int resId = FloatHeartSurfaceView.HEART_RES_IDS[index];
         return resId;
     }
 
