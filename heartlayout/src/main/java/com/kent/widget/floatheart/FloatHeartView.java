@@ -126,8 +126,8 @@ public class FloatHeartView extends FrameLayout {
 
         mBeginWaitTs = 0;
         mLastAddTs = now;
-        HeartHolder heart = new HeartHolder(resId);
-        heart.showHeart();
+        HeartAnimation animation = new HeartAnimation(resId);
+        animation.showHeart();
 
         if (DEBUG) {
             Drawable drawable = getPathDrawable();
@@ -141,26 +141,26 @@ public class FloatHeartView extends FrameLayout {
         canvas.drawColor(0xE0FFFFFF);
         for (int i = 0; i < getChildCount(); i++) {
             View view = getChildAt(i);
-            HeartHolder holder = (HeartHolder) view.getTag();
-            drawPath(canvas, holder);
+            HeartAnimation animation = (HeartAnimation) view.getTag();
+            drawPath(canvas, animation);
         }
         return new BitmapDrawable(getResources(), bitmap);
     }
 
-    private void drawPath(Canvas canvas, HeartHolder holder) {
+    private void drawPath(Canvas canvas, HeartAnimation animation) {
         Paint paint = new Paint();
         paint.setAntiAlias(true);
         paint.setStrokeWidth(4);
         paint.setColor(Color.BLUE);
         paint.setStyle(Paint.Style.STROKE);
-        canvas.drawPath(holder.path, paint);
+        canvas.drawPath(animation.path, paint);
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.RED);
         paint.setStrokeWidth(2);
         paint.setTextSize(30);
-        for (int i = 0; i < holder.points.size(); i++) {
-            CPoint point = holder.points.get(i);
+        for (int i = 0; i < animation.points.size(); i++) {
+            CPoint point = animation.points.get(i);
             Log.d(TAG, point.toString());
             canvas.drawText(String.valueOf(i+1), point.x, point.y, paint);
         }
@@ -176,7 +176,7 @@ public class FloatHeartView extends FrameLayout {
         return weakReference.get();
     }
 
-    private class HeartHolder extends Animation implements Animation.AnimationListener{
+    private class HeartAnimation extends Animation implements Animation.AnimationListener{
         private final Path path;
         private final float rotate;
         private final float scale;
@@ -189,7 +189,7 @@ public class FloatHeartView extends FrameLayout {
 
         private long startTime;
 
-        public HeartHolder(int resId) {
+        public HeartAnimation(int resId) {
             rotate = mRandom.nextFloat() * HEART_ROTATE_RANGE - HEART_ROTATE_RANGE / 2;
             scale = SCALE_ENABLE ? HEART_SCALES[mRandom.nextInt(HEART_SCALES.length)] : 1.0f;
 
@@ -204,7 +204,7 @@ public class FloatHeartView extends FrameLayout {
 
             heartView = new ImageView(getContext());
             heartView.setImageBitmap(bitmap);
-            heartView.setTag(HeartHolder.this);
+            heartView.setTag(HeartAnimation.this);
 
             CPoint start = new CPoint(getMeasuredWidth() / 2.0f, getMeasuredHeight());
             points = getPoints(start);
