@@ -229,7 +229,12 @@ public class FloatHeartView extends FrameLayout {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            removeView(heartView);
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    removeView(heartView);
+                }
+            });
         }
 
         @Override
