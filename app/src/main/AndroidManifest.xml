@@ -52,6 +52,15 @@
                 <category android:name="${applicationId}.SIMPLE_CODE"/>
             </intent-filter>
         </activity>
-    </application>
+        <activity
+            android:name=".demo.PieChartActivity"
+            android:label="Widget/Pie Chart"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
 
+                <category android:name="${applicationId}.SIMPLE_CODE"/>
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
