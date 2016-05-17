@@ -62,5 +62,20 @@
                 <category android:name="${applicationId}.SIMPLE_CODE"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".demo.notify.NotifyActivity"
+            android:label="Other/Notify">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="${applicationId}.SIMPLE_CODE"/>
+            </intent-filter>
+        </activity>
+        <receiver android:name=".demo.notify.HeadsUpNotifyReceiver">
+            <intent-filter>
+                <action android:name="${applicationId}.FULL_SCREEN_RECEIVER"/>
+                <action android:name="${applicationId}.DELETE_RECEIVER"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
