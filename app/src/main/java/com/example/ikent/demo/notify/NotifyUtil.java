@@ -49,24 +49,25 @@ public class NotifyUtil {
         builder.setAutoCancel(true);
 
         if (showHandsUp) {
-            Intent fullScreenIntent = new Intent(HeadsUpNotifyReceiver.ACTION_FULL_SCREEN);
-            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TAG, notifyTag);
-            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_ID, notifyId);
-            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TITLE, title);
-            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_CONTENT, content);
-            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TICKER, ticker);
-            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_INTENT, intent);
-
-            PendingIntent fullScreenPendingIntent = PendingIntent.getBroadcast(context, 1, fullScreenIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-            builder.setFullScreenIntent(fullScreenPendingIntent, true);
+            builder.setPriority(Notification.PRIORITY_HIGH);
+//            Intent fullScreenIntent = new Intent(HeadsUpNotifyReceiver.ACTION_FULL_SCREEN);
+//            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TAG, notifyTag);
+//            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_ID, notifyId);
+//            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TITLE, title);
+//            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_CONTENT, content);
+//            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TICKER, ticker);
+//            fullScreenIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_INTENT, intent);
+//
+//            PendingIntent fullScreenPendingIntent = PendingIntent.getBroadcast(context, 1, fullScreenIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+//            builder.setFullScreenIntent(fullScreenPendingIntent, true);
 //            context.sendBroadcast(fullScreenIntent);
-
-            Intent deleteIntent = new Intent(HeadsUpNotifyReceiver.ACTION_DELETE);
-            deleteIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TAG, notifyTag);
-            deleteIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_ID, notifyId);
-
-            PendingIntent deletePendingIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-            builder.setDeleteIntent(deletePendingIntent);
+//
+//            Intent deleteIntent = new Intent(HeadsUpNotifyReceiver.ACTION_DELETE);
+//            deleteIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_TAG, notifyTag);
+//            deleteIntent.putExtra(HeadsUpNotifyReceiver.KEY_NOTIFY_ID, notifyId);
+//
+//            PendingIntent deletePendingIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+//            builder.setDeleteIntent(deletePendingIntent);
         }
 
         builder.setDefaults(Notification.DEFAULT_ALL);
