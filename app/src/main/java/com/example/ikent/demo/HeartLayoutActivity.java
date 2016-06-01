@@ -4,9 +4,8 @@ import android.os.Bundle;
 
 import com.example.ikent.BaseActivity;
 import com.example.ikent.R;
-import com.kent.widget.floatheart.FloatHeartSurfaceView;
 import com.kent.widget.floatheart.FloatHeartView;
-import com.kent.widget.heartlayout.HeartLayout;
+import com.kent.widget.floatheart.opengl.GLFloatHeartView;
 
 import java.util.Random;
 import java.util.Timer;
@@ -15,56 +14,50 @@ import java.util.TimerTask;
 public class HeartLayoutActivity extends BaseActivity {
     private Random mRandom = new Random();
     private Timer mTimer = new Timer();
-    private HeartLayout mHeartLayout;
-    private FloatHeartSurfaceView mFloatHeart;
-    private FloatHeartView mFloatHeartView;
+    private GLFloatHeartView mGLFloatHeart;
+    private FloatHeartView mViewFloatHeart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_heart_layout);
 
-        mHeartLayout = (HeartLayout) findViewById(R.id.heart_layout);
-        mFloatHeart = (FloatHeartSurfaceView) findViewById(R.id.float_heart);
-        mFloatHeartView = (FloatHeartView) findViewById(R.id.float_heart_view);
+        mGLFloatHeart = (GLFloatHeartView) findViewById(R.id.gl_float_heart);
+        mViewFloatHeart = (FloatHeartView) findViewById(R.id.view_float_heart);
         repeat();
-        mFloatHeart.addHeart(floatHeartRandomResId());
-        mFloatHeartView.addHeart(floatHeartViewRandomResId());
+        mGLFloatHeart.addHeart(glFloatHeartViewRandomIndex());
+        mViewFloatHeart.addHeart(floatHeartViewRandomResId());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mHeartLayout.aminResume();
-        mFloatHeart.startFloatAnim();
-        mFloatHeartView.aminResume();
+        mGLFloatHeart.aminResume();
+        mViewFloatHeart.aminResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mHeartLayout.aminPause();
-        mFloatHeart.stopFloatAnim();
-        mFloatHeartView.aminPause();
+        mGLFloatHeart.aminPause();
+        mViewFloatHeart.aminPause();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mTimer.cancel();
-        mFloatHeart.destroy();
     }
 
     private void repeat() {
         mTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                mHeartLayout.post(new Runnable() {
+                mViewFloatHeart.post(new Runnable() {
                     @Override
                     public void run() {
-                        mHeartLayout.showHeartNow(randomResId());
-                        mFloatHeart.addHeart(floatHeartRandomResId());
-                        mFloatHeartView.addHeart(floatHeartViewRandomResId());
+                        mGLFloatHeart.addHeart(glFloatHeartViewRandomIndex());
+                        mViewFloatHeart.addHeart(floatHeartViewRandomResId());
                     }
                 });
             }
@@ -72,24 +65,18 @@ public class HeartLayoutActivity extends BaseActivity {
     }
 
     private void oneTime() {
-        mHeartLayout.postDelayed(new Runnable() {
+        mViewFloatHeart.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mHeartLayout.showHeartNow(randomResId());
+                mGLFloatHeart.addHeart(glFloatHeartViewRandomIndex());
+                mViewFloatHeart.addHeart(floatHeartViewRandomResId());
             }
         }, 1000);
     }
 
-    private int randomResId() {
-        int index = mRandom.nextInt(HeartLayout.HEART_RES_IDS.length);
-        int resId = HeartLayout.HEART_RES_IDS[index];
-        return resId;
-    }
-
-    private int floatHeartRandomResId() {
-        int index = mRandom.nextInt(FloatHeartSurfaceView.HEART_RES_IDS.length);
-        int resId = FloatHeartSurfaceView.HEART_RES_IDS[index];
-        return resId;
+    private int glFloatHeartViewRandomIndex() {
+        int index = mRandom.nextInt(mGLFloatHeart.HEART_RES_IDS.length);
+        return index;
     }
 
     private int floatHeartViewRandomResId() {
